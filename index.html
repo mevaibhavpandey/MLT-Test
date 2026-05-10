@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>MLT Lantern Test (RGY) — Manual Advance</title>
+  <style>
+    :root{
+      --bg:#000;
+      --panel:#0a0a0a;
+      --text:#eaeaea;
+      --muted:#bdbdbd;
+      --outline:#2a2a2a;
+      --btn:#141414;
+      --btnHover:#222;
+      --danger:#ff4d4d;
+      --ok:#3dff8a;
+    }
+
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-height:100vh;
+      padding:16px;
+    }
+
+    .app{
+      width:min(980px, 100%);
+      background: linear-gradient(180deg, #040404, #000);
+      border:1px solid var(--outline);
+      border-radius:16px;
+      padding:18px;
+      box-shadow: 0 0 40px rgba(0,0,0,0.85);
+    }
+
+    .topbar{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:12px;
+    }
+
+    .title{
+      font-size:20px;
+      font-weight:800;
+      letter-spacing:0.3px;
+    }
+
+    .subtitle{
+      color:var(--muted);
+      font-size:13px;
+      margin-top:5px;
+      line-height:1.35;
+    }
+
+    .controls{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    button{
+      background:var(--btn);
+      color:var(--text);
+      border:1px solid var(--outline);
+      border-radius:10px;
+      padding:10px 12px;
+      cursor:pointer;
+      font-weight:800;
+      transition:0.15s ease;
+    }
+    button:hover{ background:var(--btnHover); }
+    button:disabled{ opacity:0.5; cursor:not-allowed; }
+
+    .stage{
+      margin-top:10px;
+      background: rgba(10,10,10,0.78);
+      border:1px solid var(--outline);
+      border-radius:16px;
+      padding:16px;
+    }
+
+    .row{
+      display:flex;
+      gap:16px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+    }
+
+    .status{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      color:#ffffffcc;
+      font-weight:800;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      font-size:12px;
+      font-weight:900;
+    }
+
+    .lights{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:18px;
+      width:100%;
+      margin-top:12px;
+    }
+
+    .lightCard{
+      background: var(--panel);
+      border:1px solid var(--outline);
+      border-radius:18px;
+      padding:14px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      align-items:center;
+      position:relative;
+      overflow:hidden;
+      min-height:280px;
+    }
+
+    .lampLabel{
+      font-weight:900;
+      letter-spacing:0.8px;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .viewBox{
+      width: min(380px, 100%);
+      height: 200px;
+      border-radius:16px;
+      background:#000;
+      border:1px solid rgba(255,255,255,0.10);
+      position:relative;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow: inset 0 0 35px rgba(0,0,0,0.85);
+    }
+
+    .dot{
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background:#000;
+      opacity:0;
+      transition: 0.08s linear;
+      box-shadow: none;
+    }
+
+    .dot.show{
+      opacity:1;
+    }
+
+    .dotGlow{
+      box-shadow:
+        0 0 12px rgba(255,255,255,0.05),
+        0 0 22px currentColor,
+        0 0 40px currentColor;
+    }
+
+    .choices{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:center;
+      margin-top:6px;
+    }
+
+    .choiceBtn{
+      min-width:82px;
+      text-transform:uppercase;
+      letter-spacing:0.6px;
+      font-size:13px;
+      font-weight:900;
+    }
+
+    .choiceBtn.selected{
+      outline:2px solid rgba(255,255,255,0.35);
+      box-shadow: 0 0 18px rgba(255,255,255,0.12);
+      background:#1c1c1c;
+    }
+
+    .hint{
+      margin-top:12px;
+      text-align:center;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.4;
+    }
+
+    .resultBox{
+      margin-top:14px;
+      padding:16px;
+      border-radius:14px;
+      border:1px solid var(--outline);
+      background: rgba(12,12,12,0.92);
+      display:none;
+    }
+    .resultBox h3{ margin:0 0 10px; font-size:17px; }
+
+    .resultList{
+      margin:12px 0 0;
+      padding-left:20px;
+      color:#dcdcdc;
+      font-size:13px;
+      line-height:1.6;
+    }
+
+    .final-score{
+      font-size:15px;
+      font-weight:900;
+      margin:12px 0;
+      padding:10px;
+      background:rgba(255,255,255,0.04);
+      border-radius:10px;
+      text-align:center;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div>
+        <div class="title">MLT Lantern Test (RGY) — Needle Dot + Manual Advance</div>
+        <div class="subtitle">
+          Lights appear for <b>1.5 s</b> → vanish → choose answers → click <b>Next Set</b> when ready.<br/>
+          <b>9 sets</b> • Sit ~50 cm away • Medium-high brightness
+        </div>
+      </div>
+
+      <div class="controls">
+        <button id="btnStart">Start / Restart</button>
+        <button id="btnNext" disabled>Next Set</button>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="row">
+        <div class="status">
+          <span class="pill" id="setPill">Set: -/-</span>
+          <span class="pill" id="statusPill">Status: Ready</span>
+        </div>
+      </div>
+
+      <div class="lights">
+        <div class="lightCard">
+          <div class="lampLabel">LEFT</div>
+          <div class="viewBox">
+            <div class="dot" id="dotLeft"></div>
+          </div>
+          <div class="choices" id="choicesLeft"></div>
+        </div>
+
+        <div class="lightCard">
+          <div class="lampLabel">RIGHT</div>
+          <div class="viewBox">
+            <div class="dot" id="dotRight"></div>
+          </div>
+          <div class="choices" id="choicesRight"></div>
+        </div>
+      </div>
+
+      <div class="hint">
+        ✅ Click <b>Next Set</b> only after choosing both LEFT and RIGHT.<br/>
+        You control the pace — no time pressure after the flash.
+      </div>
+
+      <div class="resultBox" id="resultBox">
+        <h3 id="resultTitle">Test Completed</h3>
+        <div class="final-score" id="finalScore"></div>
+        <div id="resultSummary" style="color:#d0d0d0; font-size:13.5px; line-height:1.45; margin:12px 0;"></div>
+        <ul class="resultList" id="resultList"></ul>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ===== SETTINGS ===== */
+const TOTAL_SETS = 9;
+const FLASH_MS = 1500;
+
+const SHADES = {
+  R: ["#ff2a2a","#ff3b00","#e60026","#ff4d00","#d45500","#aa3300"],
+  G: ["#00cc44","#22c55e","#66cc00","#99b300","#b2e600","#2bd36b"],
+  Y: ["#ffd11a","#ffbb00","#ffcc33","#ffee55","#ffaa00","#e69c00"]
+};
+
+function randInt(n){ return Math.floor(Math.random() * n); }
+function pick(arr){ return arr[randInt(arr.length)]; }
+
+function shuffle(array){
+  for(let i = array.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+function generateSets(){
+  const cats = ["R","G","Y"];
+  let sets = [];
+  while(sets.length < TOTAL_SETS){
+    const left = pick(cats);
+    const right = pick(cats);
+    const sameCount = sets.filter(s => s.left === s.right).length;
+    if(left === right && sameCount >= 3) continue;
+    sets.push({left, right});
+  }
+  return shuffle(sets);
+}
+
+/* ===== STATE ===== */
+let sets = [];
+let idx = 0;
+let answers = [];
+let currentUser = {L:null, R:null};
+let testStartTime = null;
+let phase = "idle"; // idle | flash | answer | done
+
+/* ===== DOM ===== */
+const btnStart = document.getElementById("btnStart");
+const btnNext  = document.getElementById("btnNext");
+
+const setPill    = document.getElementById("setPill");
+const statusPill = document.getElementById("statusPill");
+
+const dotLeft  = document.getElementById("dotLeft");
+const dotRight = document.getElementById("dotRight");
+
+const choicesLeft  = document.getElementById("choicesLeft");
+const choicesRight = document.getElementById("choicesRight");
+
+const resultBox    = document.getElementById("resultBox");
+const resultTitle  = document.getElementById("resultTitle");
+const finalScore   = document.getElementById("finalScore");
+const resultSummary= document.getElementById("resultSummary");
+const resultList   = document.getElementById("resultList");
+
+/* ===== HELPERS ===== */
+function setDot(dotEl, hex){
+  dotEl.style.background = hex;
+  dotEl.style.color = hex;
+  dotEl.classList.add("dotGlow");
+}
+
+function showDots(){ 
+  dotLeft.classList.add("show"); 
+  dotRight.classList.add("show"); 
+}
+function hideDots(){ 
+  dotLeft.classList.remove("show"); 
+  dotRight.classList.remove("show"); 
+}
+
+function resetChoices(){
+  currentUser = {L:null, R:null};
+  document.querySelectorAll(".choiceBtn").forEach(b => b.classList.remove("selected"));
+  btnNext.disabled = true;
+}
+
+function createChoiceButtons(){
+  const labels = {R:"Red", G:"Green", Y:"Yellow"};
+  ["Left","Right"].forEach(side => {
+    const wrap = side === "Left" ? choicesLeft : choicesRight;
+    wrap.innerHTML = "";
+    ["R","G","Y"].forEach(opt => {
+      const b = document.createElement("button");
+      b.className = "choiceBtn";
+      b.textContent = labels[opt];
+      b.dataset.value = opt;
+      b.dataset.side = side.toLowerCase()[0];
+      b.onclick = () => {
+        if(phase !== "answer") return;
+        setUserChoice(side[0], opt);
+        checkIfReadyForNext();
+      };
+      wrap.appendChild(b);
+    });
+  });
+}
+
+function setUserChoice(side, value){
+  currentUser[side] = value;
+  const wrap = side === "L" ? choicesLeft : choicesRight;
+  wrap.querySelectorAll("button").forEach(btn => {
+    btn.classList.toggle("selected", btn.dataset.value === value);
+  });
+}
+
+function checkIfReadyForNext(){
+  if(currentUser.L && currentUser.R){
+    btnNext.disabled = false;
+  } else {
+    btnNext.disabled = true;
+  }
+}
+
+function updateHeader(){
+  setPill.textContent = `Set: ${idx+1}/${TOTAL_SETS}`;
+}
+
+function clearDisplay(){
+  hideDots();
+  resetChoices();
+}
+
+/* ===== FLOW ===== */
+function startTest(){
+  sets = generateSets();
+  idx = 0;
+  answers = [];
+  currentUser = {L:null, R:null};
+  phase = "idle";
+  testStartTime = Date.now();
+
+  createChoiceButtons();
+  clearDisplay();
+
+  statusPill.textContent = "Status: Ready";
+  btnNext.disabled = true;
+  btnNext.textContent = "Next Set";
+  updateHeader();
+
+  resultBox.style.display = "none";
+}
+
+async function showSet(){
+  if(phase === "flash") return;
+  phase = "flash";
+  btnNext.disabled = true;
+
+  statusPill.textContent = "Status: Lights ON (1.5s)";
+  const target = sets[idx];
+
+  setDot(dotLeft, pick(SHADES[target.left]));
+  setDot(dotRight, pick(SHADES[target.right]));
+
+  showDots();
+  await new Promise(r => setTimeout(r, FLASH_MS));
+  hideDots();
+
+  phase = "answer";
+  statusPill.textContent = "Status: Choose answers → Next when ready";
+  resetChoices();   // important: clear previous selections
+}
+
+function nextSet(){
+  // Save answer
+  answers.push({
+    L: currentUser.L,
+    R: currentUser.R
+  });
+
+  idx++;
+
+  if(idx >= TOTAL_SETS){
+    finishTest();
+  } else {
+    showSet();
+  }
+}
+
+function finishTest(){
+  phase = "done";
+  btnNext.disabled = true;
+  const totalMs = Date.now() - testStartTime;
+  const totalSec = (totalMs / 1000).toFixed(1);
+
+  let correct = 0;
+  resultList.innerHTML = "";
+
+  for(let i = 0; i < TOTAL_SETS; i++){
+    const t = sets[i];
+    const u = answers[i];
+    const ok = (u.L === t.left && u.R === t.right);
+    if(ok) correct++;
+
+    const li = document.createElement("li");
+    li.innerHTML = `
+      <b>Set ${i+1}:</b> 
+      Your = (${u.L ?? "-"}, ${u.R ?? "-"}) 
+      • Correct = (${t.left}, ${t.right}) 
+      • <span style="color:${ok ? 'var(--ok)' : 'var(--danger)'}">
+        ${ok ? "PASS" : "WRONG"}
+      </span>
+    `;
+    resultList.appendChild(li);
+  }
+
+  const accuracy = Math.round((correct / TOTAL_SETS) * 100);
+
+  // Very simple time-aware score (example formula — feel free to tune)
+  const timeFactor = Math.max(0, 90 - (totalSec - 25) * 1.5); // ~25–35s ideal range
+  const combinedScore = Math.round(accuracy * 0.75 + timeFactor * 0.25);
+
+  finalScore.innerHTML = `
+    Accuracy: ${correct}/${TOTAL_SETS} (${accuracy}%)<br>
+    Time taken: ${totalSec} seconds<br>
+    <span style="font-size:1.15em">Performance Score: ${combinedScore}/100</span>
+  `;
+
+  let remark = "";
+  if(combinedScore >= 90)      remark = "Outstanding — very fast and accurate RGY discrimination.";
+  else if(combinedScore >= 80) remark = "Strong performance — good speed + solid accuracy.";
+  else if(combinedScore >= 65) remark = "Decent — either accuracy or speed can improve.";
+  else if(accuracy >= 70)      remark = "Good accuracy but took longer — practice for speed.";
+  else if(accuracy >= 50)      remark = "Moderate — noticeable confusion in some shades.";
+  else                         remark = "Needs training — clear difficulty with RGY distinction.";
+
+  resultSummary.innerHTML = `<b>${remark}</b><br>
+    This is a simulator only — not a substitute for professional testing.`;
+
+  resultTitle.textContent = "Result";
+  resultBox.style.display = "block";
+  statusPill.textContent = "Status: Finished";
+}
+
+/* ===== EVENTS ===== */
+btnStart.addEventListener("click", startTest);
+btnNext.addEventListener("click", nextSet);
+
+// Auto-start first set after "Start"
+btnStart.addEventListener("click", () => {
+  if(idx === 0) showSet();
+});
+
+// Initial state
+startTest();
+</script>
+</body>
+</html>
