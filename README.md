@@ -2,6 +2,8 @@
 
 An educational **Red-Green-Yellow (RGY) signal-light colour perception trainer** inspired by the Martin Lantern Test, built as a self-contained, zero-dependency HTML/CSS/JS application.
 
+Live Link- https://mevaibhavpandey.github.io/MLT-Test/
+
 > ⚠️ **Disclaimer:** This application is for **educational and training purposes only**. It is NOT an official Martin Lantern Test and does NOT constitute a medical assessment or diagnosis. For professional vision testing, consult a qualified optometrist or aviation medical examiner.
 
 ---
